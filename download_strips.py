@@ -33,7 +33,16 @@ def get_img_url(year, month, day):
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     tree = html.fromstring(urlopen(req).read())
     
+    # Attempt to get the zoom version (bigger is better, right?)
     feature_html = tree.xpath("//div[@style='display: none;']")[0]
+    img_tag = tostring(feature_html.getchildren()[0]).decode("utf-8")
+    match_obj = re.match(r'.*src="(.*)".*', img_tag, re.I)
+    
+    if match_obj:
+        return match_obj.group(1)
+    
+    # Okay, we'll have to settle for the normal version
+    feature_html = tree.xpath('//p[@class="feature_item"]')[0]
     img_tag = tostring(feature_html.getchildren()[0]).decode("utf-8")
     return re.match(r'.*src="(.*)".*', img_tag, re.I).group(1)
 
@@ -44,7 +53,11 @@ def format_date_value(num):
 
 def download_all():
     """Downloads all Peanuts strips."""
-    start_date = date(1950, 10, 2)
+    download_from(1950, 10, 2) # DRY! also RTFM
+    
+def download_from(year, month, day):
+    """Downloads all Peanuts strips published on or after the given date."""
+    start_date = date(year, month, day)
     end_date = date(2000, 2, 14) # one day extra (b/c RANGE)
     
     print("!! Launching batch download...")
@@ -82,7 +95,17 @@ def date_range(start_date, end_date):
 
 if __name__ == '__main__':
     num_args = len(sys.argv)
-    if num_args > 2:
+    if sys.argv[1] == 'from': # batch download, specific date
+        parser = argparse.ArgumentParser(
+            description='Downloads strips published on or after the given date.')
+        parser.add_argument('from', help='a flag specifying a batch download.')
+        parser.add_argument('year', help='the year to start at.')
+        parser.add_argument('month', help='the month to start at.')
+        parser.add_argument('day', help='the day to start at.')
+    
+        args = parser.parse_args()
+        download_from(args.year, args.month, args.day)
+    elif num_args > 2: # single download, specific date
         parser = argparse.ArgumentParser(
             description='Downloads Peanuts strips published on the given date.')
         parser.add_argument('year', help='the year you\'re interested in.')
