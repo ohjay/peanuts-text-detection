@@ -44,12 +44,20 @@ def get_img_url(year, month, day):
     # Okay, we'll have to settle for the normal version
     feature_html = tree.xpath('//p[@class="feature_item"]')[0]
     img_tag = tostring(feature_html.getchildren()[0]).decode("utf-8")
-    return re.match(r'.*src="(.*)".*', img_tag, re.I).group(1)
+    return re.match(r'.*src="(.*)" width.*', img_tag, re.I).group(1)
 
 def format_date_value(num):
     """Preprocesses date values for URLs by prepending 0s to single-digit arguments.
     The argument passed in (NUM) should be an integer."""
     return '0' + str(num) if 0 <= int(num) < 10 else str(num)
+    
+def is_sunday_before_1952(year, month, day):
+    """Returns true if the given date falls on a Sunday before the first Sunday strip.
+    Otherwise returns false.
+    
+    (The first Sunday "Peanuts" strip was published on 01/06/1952.)
+    """
+    return int(year) < 1952 and date(year, month, day).weekday() == 6
 
 def download_all():
     """Downloads all Peanuts strips."""
@@ -71,6 +79,9 @@ def download_single(year, month, day, verbose_or_nah):
     When the VERBOSE_OR_NAH flag is set to true, also prints a status update
     if it's the first of the month.
     """
+    if is_sunday_before_1952(year, month, day):
+        return # Sunday strips didn't exist this early
+    
     # Create a directory for the year, if it doesn't already exist
     try: 
         year_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), \
@@ -95,16 +106,16 @@ def date_range(start_date, end_date):
 
 if __name__ == '__main__':
     num_args = len(sys.argv)
-    if sys.argv[1] == 'from': # batch download, specific date
+    if num_args > 1 and sys.argv[1] == 'from': # batch download, specific date
         parser = argparse.ArgumentParser(
             description='Downloads strips published on or after the given date.')
         parser.add_argument('from', help='a flag specifying a batch download.')
         parser.add_argument('year', help='the year to start at.')
         parser.add_argument('month', help='the month to start at.')
         parser.add_argument('day', help='the day to start at.')
-    
+        
         args = parser.parse_args()
-        download_from(args.year, args.month, args.day)
+        download_from(int(args.year), int(args.month), int(args.day))
     elif num_args > 2: # single download, specific date
         parser = argparse.ArgumentParser(
             description='Downloads Peanuts strips published on the given date.')
@@ -113,6 +124,6 @@ if __name__ == '__main__':
         parser.add_argument('day', help='the day you\'re interested in.')
     
         args = parser.parse_args()
-        download_single(args.year, args.month, args.day, False)
+        download_single(int(args.year), int(args.month), int(args.day), False)
     elif num_args == 2 and sys.argv[1] == 'all':
         download_all()
