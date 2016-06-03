@@ -8,7 +8,7 @@ Clone this repository to your computer and change into the directory it creates:
 
 ```
 $ git clone https://github.com/ohjay/peanuts-text-detection.git
-cd peanuts-text-detection
+$ cd peanuts-text-detection
 ```
 
 Install the necessary Python libraries:
@@ -33,9 +33,9 @@ Congratulations! That's it for setup. At this point, you can transcribe strips b
 
 ```
 $ ./transcribe.py <year> # transcribes all strips from a single year
-$ ./transcribe.py <start_year> <end_year>: transcribes strips from a range of years
-$ ./transcribe.py all: transcribes all strips
-$ ./transcribe.py dir <input_dir>: transcribes images from the given directory
+$ ./transcribe.py <start_year> <end_year> # transcribes strips from a range of years
+$ ./transcribe.py all # transcribes all strips
+$ ./transcribe.py dir <input_dir> # transcribes images from the given directory
 ```
 
 (You only need to execute _one_ of the above commands.)
