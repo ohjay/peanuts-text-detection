@@ -8,7 +8,7 @@ the text.
 
 To install the necessary libraries: `pip install -r requirements.txt`
 To download necessary nltk data: follow the instructions at http://www.nltk.org/data.html
-To run the script: ./transcribe.py <path-to-image-directory>
+To run the script: ./transcribe.py <args> (see "Usage notes" at bottom of file)
 
 This will save the transcriptions to .txt files that have been distinguished by year
 (which seems to be Z7777 and Anjum's desired format).
