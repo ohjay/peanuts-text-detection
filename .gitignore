@@ -1,2 +1,5 @@
 credentials/
 .DS_Store
+__pycache__/
+transcribed/
+.cache/

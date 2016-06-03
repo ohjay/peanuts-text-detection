@@ -1,4 +1,4 @@
-#! python3
+#!/usr/bin/env python3
 
 """
 This script contains the code for downloading all of the Peanuts strips from GoComics.com,
