@@ -3,3 +3,4 @@ nltk>=3.0.5
 redis>=2.10.3
 lxml>=3.5.0
 requests>=2.9.1
+pyenchant>=1.6.6

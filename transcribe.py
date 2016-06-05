@@ -14,9 +14,10 @@ This will save the transcriptions to .txt files that have been distinguished by 
 (which seems to be Z7777 and Anjum's desired format).
 """
 
-import base64, os, sys, nltk, redis, re
+import base64, os, sys, nltk, redis, re, enchant
 from googleapiclient import discovery, errors
 from oauth2client.client import GoogleCredentials
+from nltk.metrics.distance import edit_distance
 
 DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
 BATCH_SIZE = 10
@@ -94,17 +95,23 @@ class Transcriber:
         (This is an appendance, not an overwrite!)
         """
         if texts:
+            chkr = SpellChecker()
+            
             # Extract the description and bounding boxes
             document, bboxes = '', {}
-            for text in texts:
+            for i, text in enumerate(texts):
+                if i == 0 or (i < 3 \
+                        and text['description'].lower() == 'peanuts'):
+                    continue
                 try:
-                    document += text['description']
+                    word = chkr.suggest(text['description'].lower())
+                    document += word + ' ' if word else ''
                     bboxes[text['description']] = text['boundingPoly']
                 except KeyError as e:
                     print('KeyError: %s\n%s' % (e, text))
             
             # Uncomment the following in order to see each image's words:
-            # print("Words found in %s: %s" % (filename, document))
+            print("Words found in %s: %s" % (filename, document))
             
             # Uncomment the following in order to see each text's bbox:
             # print(bboxes)
@@ -132,7 +139,7 @@ class Transcriber:
             else:
                 f.write('-'.join(s for s in (year, month, day)) + '\n')
             
-            document = truecase(document)
+            document = truecase(document.strip())
             for sentence in self.tokenizer(document):
                 f.write(sentence + '\n')
             
@@ -155,6 +162,54 @@ class Transcriber:
             return True
         return False
         
+class SpellChecker:
+    """This class checks text for spelling errors and offers suggestions
+    for words not contained in PyEnchant's internal dictionary.
+    
+    Implementation partially borrowed from Coaden (http://stackoverflow.com/a/24192883).
+    """
+    
+    # Theoretically if I add enough stuff to this, everything can be corrected
+    common_misspellings = {
+        'ounus': 'Linus', 'c': '', 'c.': '', '(mnot': "I'm not", '(m': "I'm",
+        'imreally': "I'm really", '(mnot!': "I'm not!", 'schulz': ''
+    }
+    
+    def __init__(self, lang='en_US', max_dist=3):
+        self.d = enchant.Dict(lang)
+        self.max_dist = max_dist
+        
+    def insert_i(self, word):
+        """
+        Attempts to create a correct spelling by inserting the letter 'i'
+        at different spots inside WORD.
+        
+        Reasoning: 'i' often seems to be lost in detection.
+        """
+        for j in range(len(word) + 1):
+            with_i = word[:j] + 'i' + word[j:]
+            if self.d.check(with_i):
+                return with_i
+        return False
+    
+    def suggest(self, word):
+        if word in SpellChecker.common_misspellings:
+            return SpellChecker.common_misspellings[word]
+        elif self.d.check(word):
+            return word # no suggestions; the word is already good
+        
+        # Try sticking an 'i' in the word somewhere
+        with_i = self.insert_i(word)
+        if with_i:
+            return with_i
+        
+        suggestions = self.d.suggest(word)
+        for suggestion in suggestions:
+            if edit_distance(word, suggestion) <= self.max_dist:
+                return suggestion
+        
+        return word
+    
 def extract(texts):
     """
     Extracts truecased text from the first file associated
