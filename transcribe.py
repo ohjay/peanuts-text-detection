@@ -83,7 +83,7 @@ class Transcriber:
         self.tokenizer = nltk.data.load(sent_detector_path).tokenize
         self.save_directory = save_directory
         
-        self.redis_docs_client = redis.StrictRedis(db=2)
+        self.redis_docs_client = redis.StrictRedis(db=6)
         self.redis_docs_client.ping() # initial check on redis connection
         
     def transcribe(self, filename, texts, year):
@@ -148,8 +148,6 @@ class Transcriber:
             f.write('\n')
             f.close()
             self.redis_docs_client.set(filename, document)
-            sys.stdout.write('.')  # this is just a progress indicator
-            sys.stdout.flush()
         elif texts == []:
             print('%s had no discernible text.' % filename)
 
@@ -251,6 +249,7 @@ def process_text_from_files(vision, transcriber, input_filenames, year):
     """Calls the Vision API on a file and transcribes the results."""
     texts = vision.detect_text(input_filenames)
     for filename, text in texts.items():
+        print('>> Transcribing ' + filename + '...')
         transcriber.transcribe(filename, text, year)
 
 def batch(iterable, batch_size=BATCH_SIZE):
@@ -322,7 +321,7 @@ if __name__ == '__main__':
         if sys.argv[1] == 'all':
             main(1950, 2000)
         else:
-            main(sys.argv[1])
+            main(sys.argv[1], sys.argv[1])
         bad_input = False
     
     if bad_input: # command error
