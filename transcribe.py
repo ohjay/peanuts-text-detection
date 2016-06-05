@@ -111,7 +111,7 @@ class Transcriber:
                     print('KeyError: %s\n%s' % (e, text))
             
             # Uncomment the following in order to see each image's words:
-            print("Words found in %s: %s" % (filename, document))
+            # print("Words found in %s: %s" % (filename, document))
             
             # Uncomment the following in order to see each text's bbox:
             # print(bboxes)
@@ -172,36 +172,47 @@ class SpellChecker:
     # Theoretically if I add enough stuff to this, everything can be corrected
     common_misspellings = {
         'ounus': 'Linus', 'c': '', 'c.': '', '(mnot': "I'm not", '(m': "I'm",
-        'imreally': "I'm really", '(mnot!': "I'm not!", 'schulz': ''
+        'imreally': "I'm really", '(mnot!': "I'm not!", 'schulz': '', 'dont': "don't",
+        'm': "I'm", '60': 'go', "ol'": "ol'" # ol' is fine
     }
+    
+    # (Commonly) omitted characters
+    omitted_chars = ['i', 'y']
+    
+    # A small punctuation collection
+    punctuation = set(('.', ',', "'", '!', '?', ':', ';'))
     
     def __init__(self, lang='en_US', max_dist=3):
         self.d = enchant.Dict(lang)
         self.max_dist = max_dist
         
-    def insert_i(self, word):
+    def insert_char(self, word, char):
         """
-        Attempts to create a correct spelling by inserting the letter 'i'
-        at different spots inside WORD.
+        Attempts to create a correct spelling by inserting the character CHAR
+        at different spots within WORD.
         
-        Reasoning: 'i' often seems to be lost in detection.
+        Reasoning: letters like 'i' and 'y' often seem to be lost in detection.
         """
         for j in range(len(word) + 1):
-            with_i = word[:j] + 'i' + word[j:]
-            if self.d.check(with_i):
-                return with_i
+            with_char = word[:j] + char + word[j:]
+            if self.d.check(with_char):
+                return with_char
         return False
     
     def suggest(self, word):
         if word in SpellChecker.common_misspellings:
             return SpellChecker.common_misspellings[word]
-        elif self.d.check(word):
-            return word # no suggestions; the word is already good
+        elif self.d.check(word) \
+                or any(p in word for p in SpellChecker.punctuation):
+            # (a) No suggestions; the word is already spelled correctly
+            # (b) Don't mess with the punctuation!
+            return word
         
-        # Try sticking an 'i' in the word somewhere
-        with_i = self.insert_i(word)
-        if with_i:
-            return with_i
+        # Try sticking commonly omitted characters in the word somewhere
+        for c in SpellChecker.omitted_chars:
+            with_char = self.insert_char(word, c)
+            if with_char:
+                return with_char
         
         suggestions = self.d.suggest(word)
         for suggestion in suggestions:
