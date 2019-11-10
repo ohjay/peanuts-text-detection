@@ -4,3 +4,5 @@ __pycache__/
 transcribed/
 .cache/
 strips/
+testdata/peanuts_movie.jpeg
+testdata/random_strip.gif

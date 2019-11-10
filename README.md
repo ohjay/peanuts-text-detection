@@ -1,5 +1,5 @@
 # Peanuts Text Detection
-Peanuts Text Detection (PTD) contains scripts for downloading and transcribing Peanuts comics. Made for the folks over at /r/peanuts and [peanuts-search](https://github.com/anjum-ahmed/peanuts-search), who are building a searchable Peanuts archive and who (as of May 31, 2016) seem to be transcribing all of the strips by hand. Just thought that this would speed up the workflow! :)
+Peanuts Text Detection (PTD) contains scripts for downloading and transcribing Peanuts comics. Made for the folks over at /r/peanuts and [peanuts-search](https://github.com/anjum-ahmed/strip-search), who are building a searchable Peanuts archive and who (as of May 31, 2016) seem to be transcribing all of the strips by hand. Just thought that this would speed up the workflow! :)
 
 Uses Google's [Cloud Vision API](https://cloud.google.com/vision/) to obtain text from comic strips, [nltk](http://www.nltk.org/index.html) for tokenization and truecasing, and [Redis](http://redis.io/) as local storage for document content.
 
